@@ -28,6 +28,7 @@ const mongodb = () => {
 mongodb()
 const Users = client.db('skybay').collection('users')
 const Posts = client.db('skybay').collection('posts')
+const Comments = client.db('skybay').collection('comments')
 
 app.post('/user', async (req, res) => {
     const userdata = req.body;
@@ -90,10 +91,83 @@ app.post('/posts', async (req, res) => {
         res.send({ success: false, message: error.message })
     }
 })
+app.put('/posts/:id', async (req, res) => {
+    const { id } = req.params
+    const { postid } = req.body
+    const filter = { _id: ObjectId(id) }
+    const updateDoc = {
+        $push: {
+            likesPerson: postid
+        },
+        $inc: {
+            likes: 1
+        }
+    }
+    try {
+        const result = await Posts.updateMany(filter, updateDoc)
+        res.send({
+            success: true,
+            data: result
+        })
+        // console.log(filter, updateDoc);
+    } catch (error) {
+        console.log(error.name, error.message)
+        res.send({ success: false, message: error.message })
+    }
+})
 app.get('/posts', async (req, res) => {
     const query = {}
     try {
         const result = await Posts.find(query).sort({ dataAdded: -1 }).toArray();
+        res.send({ success: true, data: result })
+    } catch (error) {
+        console.log(error.name, error.message)
+        res.send({ success: false, message: error.message })
+    }
+})
+
+app.get('/likeposts', async (req, res) => {
+    const query = {}
+    try {
+        const result = await Posts.find(query).sort({ likes: -1 }).toArray();
+        console.log(result.length);
+        res.send({ success: true, data: result })
+    } catch (error) {
+        console.log(error.name, error.message)
+        res.send({ success: false, message: error.message })
+    }
+})
+
+
+
+app.get('/post/:id', async (req, res) => {
+    const { id } = req.params
+    const query = { _id: ObjectId(id) }
+    try {
+        const result = await Posts.find(query).toArray();
+        res.send({ success: true, data: result })
+    } catch (error) {
+        console.log(error.name, error.message)
+        res.send({ success: false, message: error.message })
+    }
+})
+app.post('/comments', async (req, res) => {
+    const commentData = req.body;
+    // console.log(commentData);
+    try {
+        const result = await Comments.insertOne(commentData)
+        res.send({ success: true, data: result })
+    } catch (error) {
+        console.log(error.name, error.message)
+        res.send({ success: false, message: error.message })
+    }
+})
+app.get('/comments', async (req, res) => {
+    const { postId } = req.query
+    const query = { postID: postId }
+    // console.log(postId);
+    try {
+        const result = await Comments.find(query).toArray();
         res.send({ success: true, data: result })
     } catch (error) {
         console.log(error.name, error.message)
