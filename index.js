@@ -82,7 +82,7 @@ app.put('/user/:id', async (req, res) => {
 })
 app.post('/posts', async (req, res) => {
     const postdata = req.body;
-    console.log(postdata);
+    // console.log(postdata);
     try {
         const result = await Posts.insertOne(postdata)
         res.send({ success: true, data: result })
@@ -116,10 +116,15 @@ app.put('/posts/:id', async (req, res) => {
     }
 })
 app.get('/posts', async (req, res) => {
+    const { type } = req.query
+    // console.log(type);
     const query = {}
     try {
-        const result = await Posts.find(query).sort({ dataAdded: -1 }).toArray();
-        res.send({ success: true, data: result })
+        if (type == 'recentPost') {
+            const result = await Posts.find(query).sort({ dataAdded: -1 }).toArray();
+            res.send({ success: true, data: result })
+        }
+
     } catch (error) {
         console.log(error.name, error.message)
         res.send({ success: false, message: error.message })
@@ -128,10 +133,14 @@ app.get('/posts', async (req, res) => {
 
 app.get('/likeposts', async (req, res) => {
     const query = {}
+    const { type } = req.query
+
     try {
-        const result = await Posts.find(query).sort({ likes: -1 }).toArray();
-        console.log(result.length);
-        res.send({ success: true, data: result })
+        if (type == 'tranding') {
+            const result = await Posts.find(query).sort({ likes: -1 }).limit(3).toArray();
+            // console.log(result.length);
+            res.send({ success: true, data: result })
+        }
     } catch (error) {
         console.log(error.name, error.message)
         res.send({ success: false, message: error.message })
